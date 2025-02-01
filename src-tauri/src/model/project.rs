@@ -53,7 +53,7 @@ impl From<ProjectForCreate> for Value {
 	fn from(val: ProjectForCreate) -> Self {
 		BTreeMap::<String, Value>::from([
 			// Note: could have used map![.. => ..] as well
-			("name".to_string(), val.name.into()),
+			("name".into(), val.name.into()),
 		])
 		.into()
 	}
@@ -74,11 +74,11 @@ pub struct ProjectForUpdate {
 
 impl From<ProjectForUpdate> for Value {
 	fn from(val: ProjectForUpdate) -> Self {
-		let data = BTreeMap::<String, Value>::from([
-			// Note: could have used map![.. => ..] as well
-			("name".to_string(), val.name.into()),
-		]);
-
+		let mut data = BTreeMap::<String, Value>::new();
+		if let Some(name) = val.name {
+			data.insert("name".into(), name.into());
+		}
+		
 		data.into()
 	}
 }
