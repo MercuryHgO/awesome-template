@@ -13,7 +13,7 @@
 use crate::prelude::*;
 use crate::{Error, Result};
 use modql::filter::{FilterGroups, OpVal, OpValBool, OpValFloat64, OpValInt64, OpValString};
-use modql::ListOptions;
+use modql::filter::ListOptions;
 use std::collections::BTreeMap;
 use surrealdb::sql::Value;
 
@@ -122,12 +122,12 @@ fn sqlize(opval: OpVal, prop_name: &str, var_idx: &str) -> Result<(String, Value
 
 		// startsWith
 		OpVal::String(OpValString::StartsWith(v)) => {
-			(f!("string::startsWith({prop_name}, ${var_idx}) "), v.into())
+			(f!("string::starts_with({prop_name}, ${var_idx})"), v.into())
 		}
 
 		// endsWith
 		OpVal::String(OpValString::EndsWith(v)) => {
-			(f!("string::endsWith({prop_name}, ${var_idx}) "), v.into())
+			(f!("string::ends_with({prop_name}, ${var_idx})"), v.into())
 		}
 
 		_ => return Err(Error::ModqlOperatorNotSupported(f!("{opval:?}"))),

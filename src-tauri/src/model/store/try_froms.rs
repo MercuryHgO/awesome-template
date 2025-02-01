@@ -3,6 +3,7 @@
 use crate::prelude::*;
 use crate::{Error, Result};
 use surrealdb::sql::{Array, Object, Value};
+use crate::model::store::Value::Bool;
 
 impl TryFrom<W<Value>> for Object {
 	type Error = Error;
@@ -38,8 +39,7 @@ impl TryFrom<W<Value>> for bool {
 	type Error = Error;
 	fn try_from(val: W<Value>) -> Result<bool> {
 		match val.0 {
-			Value::False => Ok(false),
-			Value::True => Ok(true),
+			Bool(bool_val) => Ok(bool_val),
 			_ => Err(Error::XValueNotOfType("bool")),
 		}
 	}

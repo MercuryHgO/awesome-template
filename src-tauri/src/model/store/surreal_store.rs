@@ -9,7 +9,7 @@ use crate::prelude::*;
 use crate::utils::{map, XTake};
 use crate::{Error, Result};
 use modql::filter::FilterGroups;
-use modql::ListOptions;
+use modql::filter::ListOptions;
 use surrealdb::dbs::Session;
 use surrealdb::kvs::Datastore;
 use surrealdb::sql::{thing, Array, Datetime, Object, Value};
@@ -27,7 +27,9 @@ pub(in crate::model) struct SurrealStore {
 impl SurrealStore {
 	pub(in crate::model) async fn new() -> Result<Self> {
 		let ds = Datastore::new("memory").await?;
-		let ses = Session::for_db("appns", "appdb");
+		let ses = Session::owner();
+		let ses = Session::with_ns(ses,"appns");
+		let ses = Session::with_db(ses,"appdb");
 		Ok(SurrealStore { ds, ses })
 	}
 
@@ -36,7 +38,7 @@ impl SurrealStore {
 
 		let vars = map!["th".into() => thing(tid)?.into()];
 
-		let ress = self.ds.execute(sql, &self.ses, Some(vars), true).await?;
+		let ress = self.ds.execute(sql, &self.ses, Some(vars)).await?;
 
 		let first_res = ress.into_iter().next().expect("Did not get a response");
 
@@ -51,14 +53,14 @@ impl SurrealStore {
 		let sql = "CREATE type::table($tb) CONTENT $data RETURN id";
 
 		let mut data: Object = W(data.into()).try_into()?;
-		let now = Datetime::default().timestamp_nanos();
+		let now = Datetime::default().timestamp_nanos_opt();
 		data.insert("ctime".into(), now.into());
 
 		let vars = map![
 			"tb".into() => tb.into(),
 			"data".into() => Value::from(data)];
 
-		let ress = self.ds.execute(sql, &self.ses, Some(vars), false).await?;
+		let ress = self.ds.execute(sql, &self.ses, Some(vars)).await?;
 		let first_val = ress
 			.into_iter()
 			.next()
@@ -86,7 +88,7 @@ impl SurrealStore {
 			"th".into() => thing(tid)?.into(),
 			"data".into() => data.into()];
 
-		let ress = self.ds.execute(sql, &self.ses, Some(vars), true).await?;
+		let ress = self.ds.execute(sql, &self.ses, Some(vars)).await?;
 
 		let first_res = ress.into_iter().next().expect("id not returned");
 
@@ -106,7 +108,7 @@ impl SurrealStore {
 
 		let vars = map!["th".into() => thing(tid)?.into()];
 
-		let ress = self.ds.execute(sql, &self.ses, Some(vars), false).await?;
+		let ress = self.ds.execute(sql, &self.ses, Some(vars)).await?;
 
 		let first_res = ress.into_iter().next().expect("Did not get a response");
 
@@ -126,7 +128,7 @@ impl SurrealStore {
 		let filter_or_groups = filter_groups.map(|v| v.into());
 		let (sql, vars) = build_select_query(tb, filter_or_groups, list_options)?;
 
-		let ress = self.ds.execute(&sql, &self.ses, Some(vars), false).await?;
+		let ress = self.ds.execute(&sql, &self.ses, Some(vars)).await?;
 
 		let first_res = ress.into_iter().next().expect("Did not get a response");
 
@@ -147,7 +149,7 @@ mod tests {
 
 	use crate::model::ModelStore;
 	use crate::utils::XTake;
-	use modql::ListOptions;
+	use modql::filter::ListOptions;
 
 	static STORE_ONCE: OnceCell<Arc<ModelStore>> = OnceCell::const_new();
 

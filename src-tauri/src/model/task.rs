@@ -8,7 +8,7 @@ use crate::ctx::Ctx;
 use crate::utils::{map, XTake};
 use crate::{Error, Result};
 use modql::filter::{FilterNodes, OpValsString};
-use modql::ListOptions;
+use modql::filter::ListOptions;
 use serde::{Deserialize, Serialize};
 use serde_with_macros::skip_serializing_none;
 use std::collections::BTreeMap;
@@ -63,7 +63,7 @@ pub struct TaskForCreate {
 
 impl From<TaskForCreate> for Value {
 	fn from(val: TaskForCreate) -> Self {
-		let mut data = map![
+		let mut data: BTreeMap::<String,Value> = map![
 			"project_id".into() => val.project_id.into(),
 			"title".into() => val.title.into(),
 		];
@@ -95,7 +95,8 @@ pub struct TaskForUpdate {
 
 impl From<TaskForUpdate> for Value {
 	fn from(val: TaskForUpdate) -> Self {
-		let mut data = BTreeMap::new();
+		let mut data: BTreeMap::<String,Value> = BTreeMap::new();
+
 		if let Some(title) = val.title {
 			data.insert("title".into(), title.into());
 		}
